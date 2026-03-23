@@ -7,7 +7,7 @@ A proposal to add a new `filetree` diagram type to [Mermaid.js](https://github.c
 | Resource | Description |
 |---|---|
 | [**Interactive Demo**](https://notionparallax.github.io/mermaid_files/) | Live proof-of-concept with dual-format parser, 30+ file-type icons, light/dark themes |
-| [**Feature Proposal**](https://notionparallax.github.io/mermaid_files/feature-proposal.htmll) | GitHub issue–style write-up: motivation, syntax, icons, config, accessibility |
+| [**Feature Proposal**](https://notionparallax.github.io/mermaid_files/feature-proposal.html) | GitHub issue–style write-up: motivation, syntax, icons, config, accessibility |
 | [**Technical Spec**](https://notionparallax.github.io/mermaid_files/technical-spec.html) | Spec: grammar, AST, icon resolution, renderer algorithm, testing plan, codebase integration |
 
 ## Quick preview
