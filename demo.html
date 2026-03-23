@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mermaid File Tree — Interactive Demo</title>
+    <style>
+        :root {
+            --bg: #1e1e1e;
+            --panel-bg: #252526;
+            --border: #3c3c3c;
+            --text: #cccccc;
+            --text-muted: #888888;
+            --accent: #569cd6;
+            --connector: #555555;
+            --dir-color: #e0e0e0;
+            --file-color: #aaaaaa;
+            --desc-color: #6a9955;
+            --highlight-bg: rgba(255, 193, 7, 0.15);
+            --highlight-border: #ffc107;
+            --font-mono: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+            --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: var(--font-sans);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            padding: 12px 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        header h1 {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        header span {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .container {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+        }
+
+        .editor-panel {
+            width: 45%;
+            min-width: 300px;
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .panel-header {
+            padding: 8px 16px;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            background: var(--panel-bg);
+            border-bottom: 1px solid var(--border);
+        }
+
+        textarea {
+            flex: 1;
+            background: var(--panel-bg);
+            color: var(--text);
+            border: none;
+            padding: 16px;
+            font-family: var(--font-mono);
+            font-size: 14px;
+            line-height: 1.6;
+            resize: none;
+            outline: none;
+            tab-size: 4;
+        }
+
+        .preview-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: auto;
+        }
+
+        .preview-content {
+            flex: 1;
+            padding: 24px;
+            overflow: auto;
+        }
+
+        .error {
+            color: #f44747;
+            padding: 16px;
+            font-family: var(--font-mono);
+            font-size: 13px;
+            white-space: pre-wrap;
+        }
+
+        footer {
+            padding: 8px 20px;
+            border-top: 1px solid var(--border);
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        footer a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* Theme toggle */
+        .theme-toggle {
+            margin-left: auto;
+            background: var(--panel-bg);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 4px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        /* Light theme */
+        body.light {
+            --bg: #ffffff;
+            --panel-bg: #f5f5f5;
+            --border: #e0e0e0;
+            --text: #333333;
+            --text-muted: #888888;
+            --connector: #999999;
+            --dir-color: #333333;
+            --file-color: #555555;
+            --desc-color: #6a9955;
+            --highlight-bg: rgba(255, 193, 7, 0.2);
+            --highlight-border: #ffc107;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <h1>filetree</h1>
+        <span>Interactive Demo — Proposed Mermaid Diagram Type</span>
+        <div style="display:flex;gap:6px;margin-left:16px">
+            <button class="theme-toggle" onclick="loadExample('indent')">Indent Example</button>
+            <button class="theme-toggle" onclick="loadExample('ascii')">ASCII Example</button>
+        </div>
+        <button class="theme-toggle" onclick="toggleTheme()" style="margin-left:auto">Toggle Light/Dark</button>
+    </header>
+
+    <div class="container">
+        <div class="editor-panel">
+            <div class="panel-header">Source</div>
+            <textarea id="input" spellcheck="false">filetree
+    my-project/
+        node_modules/  ## (gitignored)
+        public/
+            favicon.ico
+            index.html  ## main HTML shell
+            robots.txt
+        src/
+            components/
+                Button.tsx :::highlight  ## new component
+                Header.tsx
+                Footer.tsx
+            hooks/
+                useAuth.ts  ## authentication hook
+            utils/
+                helpers.ts
+                constants.ts
+            App.tsx :::highlight  ## app root
+            index.css
+            index.tsx  ## entry point
+        .env  ## local environment vars
+        .gitignore
+        Dockerfile
+        package.json  ## project manifest
+        tsconfig.json
+        README.md</textarea>
+        </div>
+
+        <div class="preview-panel">
+            <div class="panel-header">Rendered Preview</div>
+            <div class="preview-content" id="preview"></div>
+        </div>
+    </div>
+
+    <footer>
+        Icons inspired by
+        <a href="https://github.com/PKief/vscode-material-icon-theme" target="_blank" rel="noopener">Material Icon
+            Theme</a> (MIT) &amp;
+        <a href="https://github.com/microsoft/vscode-codicons" target="_blank" rel="noopener">Codicons</a> (MIT).
+        This demo is a proof-of-concept for the
+        <a href="https://github.com/mermaid-js/mermaid/issues" target="_blank" rel="noopener">Mermaid filetree
+            proposal</a>.
+    </footer>
+
+    <script>
+        // ──────────────────────────────────────────────────
+        // Icon SVG paths (16x16 viewBox)
+        // Simplified/inspired by Material Icon Theme (MIT)
+        // and VS Code Codicons (MIT). Hand-drawn for demo.
+        // ──────────────────────────────────────────────────
+        const ICONS = {
+            folder: { color: '#dcb67a', path: 'M1.5 3A1.5 1.5 0 0 1 3 1.5h3.293a1 1 0 0 1 .707.293L8.414 3.207a1 1 0 0 0 .707.293H13A1.5 1.5 0 0 1 14.5 5v7.5A1.5 1.5 0 0 1 13 14H3A1.5 1.5 0 0 1 1.5 12.5V3z' },
+            file: { color: '#888888', path: 'M4 1h5.5L13 4.5V13.5A1.5 1.5 0 0 1 11.5 15h-7.5A1.5 1.5 0 0 1 2.5 13.5V2.5A1.5 1.5 0 0 1 4 1zm5 0v3.5h3.5' },
+            typescript: { color: '#3178c6', path: 'M0 2h16v12H0V2zm1 1v10h14V3H1zm4.5 2.5h5v1.2H8.8V11H7.2V6.7H5.5V5.5zm5.3.1c.7 0 1.3.2 1.7.5l-.5.9c-.3-.2-.7-.3-1.1-.3-.5 0-.7.2-.7.4 0 .3.3.4.9.6.9.3 1.4.7 1.4 1.5 0 .9-.7 1.5-1.8 1.5-.8 0-1.4-.2-1.9-.7l.6-.9c.4.3.8.5 1.3.5.5 0 .7-.2.7-.5 0-.3-.2-.4-.8-.6-1-.3-1.5-.7-1.5-1.5 0-.8.7-1.4 1.7-1.4z' },
+            javascript: { color: '#f7df1e', path: 'M0 2h16v12H0V2zm1 1v10h14V3H1zm4 3.5h1.5v4c0 .8-.4 1.2-1.2 1.2-.4 0-.7-.1-.9-.2l.2-1c.1.1.3.1.4.1.3 0 .4-.1.4-.5V6.5H5zm3 0h1.5v2.3c0 .2 0 .4.1.5.1.2.3.3.5.3.4 0 .6-.2.6-.8V6.5H12v2.7c0 1.2-.6 1.8-1.7 1.8-.5 0-.9-.1-1.2-.4l.2-1c.2.2.5.3.7.3.4 0 .6-.2.6-.7V6.5H8z' },
+            react: { color: '#61dafb', path: 'M8 9.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3zm0-7C5.6 2.5 3.4 3.7 2 5.5a8.4 8.4 0 0 0 0 5C3.4 12.3 5.6 13.5 8 13.5s4.6-1.2 6-3a8.4 8.4 0 0 0 0-5C12.6 3.7 10.4 2.5 8 2.5zm5.2 3.7c-.8-1.3-2.7-2.5-5.2-2.5S3.6 4.9 2.8 6.2a7 7 0 0 0 0 3.6c.8 1.3 2.7 2.5 5.2 2.5s4.4-1.2 5.2-2.5a7 7 0 0 0 0-3.6z' },
+            python: { color: '#3776ab', path: 'M8 1c-2.8 0-4.5.8-4.5 2.3V5h4.5v.8H3.5C1.8 5.8.5 7 .5 9s1.3 3.2 3 3.2H5V10c0-1.5 1.3-2.8 2.8-2.8h3.4c1.3 0 2.3-1 2.3-2.3V2.3C13.5 1 11.2 1 8 1zM5.8 2.5a.8.8 0 1 1 0 1.5.8.8 0 0 1 0-1.5zM8 15c2.8 0 4.5-.8 4.5-2.3V11H8v-.8h4.5c1.7 0 3-1.2 3-3.2s-1.3-3.2-3-3.2H11V6c0 1.5-1.3 2.8-2.8 2.8H4.8c-1.3 0-2.3 1-2.3 2.3v2.6C2.5 15 4.8 15 8 15zm2.2-1.5a.8.8 0 1 1 0-1.5.8.8 0 0 1 0 1.5z' },
+            html: { color: '#e44d26', path: 'M1 1h14l-1.3 12.5L8 15l-5.7-1.5L1 1zm2.2 1.8l1 9.2L8 13.2l3.8-1.2 1-9.2H3.2zm2.3 2h5l-.2 1.5H6l.2 1.5h4.3l-.3 3L8 11.5l-2.2-.7-.1-1.5h1.5l.1.7.7.2.7-.2.1-1.2H5.3L5 6.8z' },
+            css: { color: '#1572b6', path: 'M1 1h14l-1.3 12.5L8 15l-5.7-1.5L1 1zm2.2 1.8l1 9.2L8 13.2l3.8-1.2 1-9.2H3.2zm1.3 2h7l-.2 1.5H7l.2 1.5h4l-.4 3.5L8 11.5l-2.8-.8-.2-1.4h1.5l.1.7 1.4.4 1.4-.4.2-1.5H5.2l-.4-3z' },
+            json: { color: '#f5d02c', path: 'M4.5 2C3.1 2 2 3.1 2 4.5V6h1.5v-1c0-.6.4-1 1-1h1V2.5H4.5zM11 2v1.5h1c.6 0 1 .4 1 1V6H14.5V4.5C14.5 3.1 13.4 2 12 2h-1zM2 10v1.5C2 12.9 3.1 14 4.5 14H6v-1.5H4.5c-.6 0-1-.4-1-1V10H2zm11 0v1.5c0 .6-.4 1-1 1H11V14h1c1.4 0 2.5-1.1 2.5-2.5V10H13zM6.5 6a.5.5 0 1 0 0 1 .5.5 0 0 0 0-1zm3 0a.5.5 0 1 0 0 1 .5.5 0 0 0 0-1zM7 9.5c0-.3.2-.5.5-.5h1a.5.5 0 0 1 0 1h-1A.5.5 0 0 1 7 9.5z' },
+            markdown: { color: '#888888', path: 'M1 3.5h14v9H1v-9zm1.5 1.5v6h11v-6h-11zm1.5 1v4h1.5V7.5L7 9.5l1.5-2V10H10V6h-1.5L7 8 5.5 6H4zm7 0v2.5H9.5L11.5 10l2-2h-1.5V6H10.5z' },
+            image: { color: '#a074c4', path: 'M2.5 2A1.5 1.5 0 0 0 1 3.5v9A1.5 1.5 0 0 0 2.5 14h11a1.5 1.5 0 0 0 1.5-1.5v-9A1.5 1.5 0 0 0 13.5 2h-11zm0 1.5h11v6.2l-2.6-2.6a.5.5 0 0 0-.7 0L7 10.3 5.3 8.6a.5.5 0 0 0-.7 0L2.5 10.7V3.5zm3 1a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3z' },
+            config: { color: '#888888', path: 'M8 1.5a1.2 1.2 0 0 1 1.2 1L9.4 3.8l1.2.5.9-.7a1.2 1.2 0 0 1 1.6.1l.7.7c.4.4.5 1.1.1 1.6l-.7.9.5 1.2 1.3.2c.6.1 1 .6 1 1.2v1c0 .6-.4 1.1-1 1.2l-1.3.2-.5 1.2.7.9c.4.5.3 1.2-.1 1.6l-.7.7a1.2 1.2 0 0 1-1.6.1l-.9-.7-1.2.5-.2 1.3c-.1.6-.6 1-1.2 1h-1c-.6 0-1.1-.4-1.2-1L6.6 12.2l-1.2-.5-.9.7a1.2 1.2 0 0 1-1.6-.1l-.7-.7a1.2 1.2 0 0 1-.1-1.6l.7-.9-.5-1.2-1.3-.2c-.6-.1-1-.6-1-1.2v-1c0-.6.4-1.1 1-1.2l1.3-.2.5-1.2-.7-.9A1.2 1.2 0 0 1 2.2 2l.7-.7a1.2 1.2 0 0 1 1.6-.1l.9.7 1.2-.5.2-1.3c.1-.6.6-1 1.2-1h1zM8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5z' },
+            git: { color: '#e84e31', path: 'M15.1 7.3L8.7.9a.9.9 0 0 0-1.3 0L5.9 2.3l1.6 1.6a1.1 1.1 0 0 1 1.4 1.4l1.6 1.5a1.1 1.1 0 1 1-.7.7L8.4 6v3.5a1.1 1.1 0 1 1-.9 0V5.9a1.1 1.1 0 0 1-.6-1.5L5.4 2.8.9 7.3a.9.9 0 0 0 0 1.3l6.4 6.5a.9.9 0 0 0 1.3 0l6.4-6.5a.9.9 0 0 0 0-1.3z' },
+            docker: { color: '#2496ed', path: 'M13 5.8c-.3-.2-1-.3-1.5-.2-.1-.6-.4-1.2-.9-1.6l-.3-.2-.2.3c-.3.4-.4.9-.4 1.4 0 .5.2 1 .5 1.3-.5.3-1.1.4-2.1.4H.5l-.1.5c0 1 .2 2 .7 2.9.6 1 1.5 1.6 2.7 1.9.5.1 1.1.2 1.7.2 1.3 0 2.5-.3 3.5-1 .8-.5 1.5-1.2 2-2.1.7.0 1.5-.1 2-.6.3-.3.5-.7.6-1.1l.1-.3-.4-.2zM2.2 7.5H4v1.8H2.2V7.5zm2.3 0H6.3v1.8H4.5V7.5zm0-2.2H6.3v1.8H4.5V5.3zm2.3 2.2H8.5v1.8H6.7V7.5zm0-2.2H8.5v1.8H6.7V5.3zM9 7.5h1.8v1.8H9V7.5zm0-2.2h1.8v1.8H9V5.3zm-4.5-2H6.3v1.8H4.5V3.2zm2.3 0H8.5v1.8H6.7V3.2z' },
+            env: { color: '#ecd53f', path: 'M2 3a1 1 0 0 1 1-1h4l2 2h4a1 1 0 0 1 1 1v1H2V3zm0 4h12v5a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V7zm3 1.5a.5.5 0 0 0 0 1h2a.5.5 0 0 0 0-1H5z' },
+            lock: { color: '#888888', path: 'M11 6V4.5C11 2.6 9.7 1 8 1S5 2.6 5 4.5V6H3.5v8h9V6H11zM6.5 4.5C6.5 3.4 7.2 2.5 8 2.5s1.5.9 1.5 2V6h-3V4.5zM8.5 10.8V12h-1v-1.2a1.2 1.2 0 1 1 1 0z' },
+            license: { color: '#c8c8c8', path: 'M3 1h10a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1zm1 2v1h8V3H4zm0 2.5v1h8v-1H4zM4 8v1h5V8H4zm0 2.5v1h6v-1H4z' },
+            terminal: { color: '#4ec9b0', path: 'M1 2.5A1.5 1.5 0 0 1 2.5 1h11A1.5 1.5 0 0 1 15 2.5v11a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 1 13.5v-11zM4 5l3 2.5L4 10l1 1 4-3.5L5 4 4 5zm5 5h3v1H9v-1z' },
+            yaml: { color: '#cb171e', path: 'M0 2h16v12H0V2zm1 1v10h14V3H1zm2 2l2 3v2.5h1.5V8l2-3h-1.7L5.5 7 4.2 5H2.5zm6 0v5h1.5V8h1c1.1 0 1.5-.6 1.5-1.5S12.1 5 11 5H8.5zm1.5 1.2h.7c.4 0 .6.1.6.4s-.2.4-.6.4H10V6.2z' },
+            database: { color: '#4ec9b0', path: 'M8 1C4.7 1 2 2.1 2 3.5v9C2 13.9 4.7 15 8 15s6-1.1 6-2.5v-9C14 2.1 11.3 1 8 1zm0 1.5c2.8 0 4.5.8 4.5 1S10.8 4.5 8 4.5 3.5 3.7 3.5 3.5 5.2 2.5 8 2.5zM3.5 5.4C4.6 6 6.2 6.3 8 6.3s3.4-.3 4.5-.9v2.1c0 .2-1.7 1-4.5 1s-4.5-.8-4.5-1V5.4zm0 4c1.1.6 2.7.9 4.5.9s3.4-.3 4.5-.9v2.1c0 .2-1.7 1-4.5 1s-4.5-.8-4.5-1V9.4z' },
+            ruby: { color: '#cc342d', path: 'M3 14l10-3.5L14 3 9 1 3.5 4 2 8.5 3 14zm5-5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z' },
+            rust: { color: '#dea584', path: 'M8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1zm0 1.5a5.5 5.5 0 1 1 0 11 5.5 5.5 0 0 1 0-11zM6 6v4h1.2V8.8H8c1.3 0 2-.7 2-1.4C10 6.6 9.3 6 8 6H6zm1.2 1h.7c.5 0 .8.2.8.5s-.3.5-.8.5H7.2V7z' },
+            go: { color: '#00add8', path: 'M1 8c0-1.5.8-2.8 2-3.5C4 3.5 5.5 3 7.2 3h.3l-.5-.8h1.5l.7 1c.3 0 .6 0 .8.1l.5-.8h1.5l-.8 1.3C12.6 4.8 14 6.2 14 8c0 2.8-2.7 5-6 5S2 10.8 2 8zm2.5 0c0 1.9 1.6 3.5 3.5 3.5S11.5 9.9 11.5 8 9.9 4.5 8 4.5 4.5 6.1 4.5 8z' },
+            java: { color: '#e76f00', path: 'M5.7 10.5s-.6.3.4.4c1.2.2 1.8.1 3.1-.1.4.2.8.5 1.2.7-3 1.3-6.8-.1-4.7-1zm-.4-1.8s-.7.5.3.6c1.4.1 2.3.2 4-.3.3.3.6.5 1 .7-3.6 1-7.6-.1-5.3-1zm4.4-3c.7.8-.2 1.5-.2 1.5s1.7-.9.9-2c-.7-1-1.3-1.5 1.8-3.2 0 0-4.8 1.2-2.5 3.7zm3 4.3s.4.4-.5.7c-1.7.5-7 .7-8.4 0-.5-.2.5-.6.8-.6.3-.1.5-.1.5-.1-.6-.4-3.6.8-1.5 1.1 5.5.9 10.1-.4 9.1-1.1zM6 7.4s-2.5.6-1 .8c.7.1 2 .1 3.3 0 1-.1 2-.2 2-.2s-.4.1-.6.3c-2.5.7-7.3.4-5.9-.3 1.2-.6 2.2-.6 2.2-.6zm4.4 2.5c2.5-1.3 1.4-2.6.5-2.4-.2 0-.3.1-.3.1s.1-.1.3-.2c2-0.7 3.5 2-.5 2.6 0 0 0-.1 0-.1z' },
+            csharp: { color: '#68217a', path: 'M8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1zm.5 2.5c1.7 0 3 .8 3.7 2l-1.5.9c-.4-.7-1.2-1.2-2.2-1.2-1.6 0-2.8 1.2-2.8 2.8S6.9 10.8 8.5 10.8c1 0 1.8-.5 2.2-1.2l1.5.9c-.7 1.2-2 2-3.7 2C6 12.5 4 10.5 4 8s2-4.5 4.5-4.5zm1.5 3h1v1h-1v1h-1V7.5h-1v-1h1V5.5h1v1z' },
+            vue: { color: '#41b883', path: 'M8 12L2 2h3l3 5.5L11 2h3L8 12zm0-2.5L5.2 4H3.5L8 11l4.5-7h-1.7L8 9.5z' },
+            svelte: { color: '#ff3e00', path: 'M12.6 2.4A4.3 4.3 0 0 0 6.3 1L3 3.2a3.6 3.6 0 0 0-1.6 2.4A3.3 3.3 0 0 0 1.8 8a3.5 3.5 0 0 0-.6 1.6 3.7 3.7 0 0 0 1.4 3.4 4.3 4.3 0 0 0 6.3 1.4L12.2 12.2a3.6 3.6 0 0 0 1.6-2.4A3.3 3.3 0 0 0 13.4 7.4a3.7 3.7 0 0 0-.8-5z' },
+            text: { color: '#888888', path: 'M3 1h10a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1zm1 2v1h8V3H4zm0 2.5v1h8v-1H4zM4 8v1h6V8H4zm0 2.5v1h7v-1H4z' },
+            table: { color: '#41a85f', path: 'M2 2h12a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1zm0 2v2h5V4H2zm7 0v2h5V4H9zM2 8v2h5V8H2zm7 0v2h5V8H9zM2 12h5v-1H2v1zm7 0h5v-1H9v1z' },
+            graphql: { color: '#e535ab', path: 'M8 1l6.5 3.75v7.5L8 16l-6.5-3.75v-7.5L8 1zm0 1.5L2.5 5.75v5.5L8 14.5l5.5-3.25v-5.5L8 2.5z' },
+            xml: { color: '#e37933', path: 'M4.5 4L1 8l3.5 4 1-1L2.8 8l2.7-3-1-1zm7 0l-1 1L13.2 8l-2.7 3 1 1L15 8l-3.5-4zM7.2 12.5l1.5.5 1-9-1.5-.5-1 9z' },
+            kotlin: { color: '#7f52ff', path: 'M2 14h12L8 8l6-6H2v12z' },
+            swift: { color: '#f05138', path: 'M13 3.6C12.7 2 11 1 9 1.5c.8 1 1.3 2.2 1 3.5-.2.9-.8 1.6-1.5 2C7 5.7 5.2 3.5 5.2 3.5S7.5 7 9.2 8.3C7.3 9.5 4 8.5 4 8.5s3.5 3 7 2c1.5-.4 2.5-1.5 2.8-3 .3-1.5-.1-2.8-.8-3.9z' },
+            cpp: { color: '#00589d', path: 'M8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1zm.5 2.5c1.7 0 3 .8 3.7 2l-1.5.9c-.4-.7-1.2-1.2-2.2-1.2-1.6 0-2.8 1.2-2.8 2.8S6.9 10.8 8.5 10.8c1 0 1.8-.5 2.2-1.2l1.5.9c-.7 1.2-2 2-3.7 2C6 12.5 4 10.5 4 8s2-4.5 4.5-4.5zM11 6h.5v1H12v.5h-.5v1H11v-1h-.5V7H11V6zm2 0h.5v1H14v.5h-.5v1H13v-1h-.5V7H13V6z' },
+            c: { color: '#a8b9cc', path: 'M8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1zm.5 2.5c1.7 0 3 .8 3.7 2l-1.5.9c-.4-.7-1.2-1.2-2.2-1.2-1.6 0-2.8 1.2-2.8 2.8S6.9 10.8 8.5 10.8c1 0 1.8-.5 2.2-1.2l1.5.9c-.7 1.2-2 2-3.7 2C6 12.5 4 10.5 4 8s2-4.5 4.5-4.5z' },
+        };
+
+        // ──────────────────────────────────────────────────
+        // Icon resolution  (§2 of the spec)
+        // ──────────────────────────────────────────────────
+        const FILENAME_ICONS = {
+            '.gitignore': 'git', '.eslintrc': 'config', '.eslintrc.js': 'config',
+            '.eslintrc.json': 'config', '.prettierrc': 'config', 'Dockerfile': 'docker',
+            'docker-compose.yml': 'docker', 'docker-compose.yaml': 'docker',
+            'Makefile': 'terminal', 'LICENSE': 'license', 'README.md': 'markdown',
+            '.env': 'env', '.env.local': 'env', '.env.production': 'env',
+            'tsconfig.json': 'typescript', 'vite.config.ts': 'config',
+            'webpack.config.js': 'config', 'package-lock.json': 'lock',
+            'yarn.lock': 'lock', 'pnpm-lock.yaml': 'lock',
+        };
+
+        const EXTENSION_ICONS = {
+            '.js': 'javascript', '.mjs': 'javascript', '.cjs': 'javascript',
+            '.jsx': 'react', '.ts': 'typescript', '.tsx': 'react',
+            '.py': 'python', '.rb': 'ruby', '.rs': 'rust', '.go': 'go',
+            '.java': 'java', '.kt': 'kotlin', '.cs': 'csharp',
+            '.cpp': 'cpp', '.c': 'c', '.h': 'c', '.swift': 'swift',
+            '.html': 'html', '.htm': 'html', '.css': 'css', '.scss': 'css',
+            '.sass': 'css', '.less': 'css', '.json': 'json', '.yaml': 'yaml',
+            '.yml': 'yaml', '.toml': 'config', '.xml': 'xml',
+            '.svg': 'image', '.png': 'image', '.jpg': 'image', '.jpeg': 'image',
+            '.gif': 'image', '.webp': 'image', '.ico': 'image',
+            '.md': 'markdown', '.mdx': 'markdown', '.txt': 'text',
+            '.sh': 'terminal', '.bash': 'terminal', '.zsh': 'terminal',
+            '.ps1': 'terminal', '.bat': 'terminal', '.sql': 'database',
+            '.graphql': 'graphql', '.gql': 'graphql', '.lock': 'lock',
+            '.log': 'text', '.csv': 'table', '.vue': 'vue', '.svelte': 'svelte',
+        };
+
+        function resolveIcon(label, nodeType, iconOverride) {
+            if (iconOverride) return iconOverride;
+            if (FILENAME_ICONS[label]) return FILENAME_ICONS[label];
+            if (nodeType === 'directory') return 'folder';
+            const dotIdx = label.lastIndexOf('.');
+            if (dotIdx > 0) {
+                const ext = label.slice(dotIdx).toLowerCase();
+                if (EXTENSION_ICONS[ext]) return EXTENSION_ICONS[ext];
+            }
+            return 'file';
+        }
+
+        // ──────────────────────────────────────────────────
+        // Parser  (§6 of the spec — dual format)
+        // ──────────────────────────────────────────────────
+        const BOX_CHARS = /[│├└─]/;
+
+        function detectFormat(lines) {
+            return lines.some(l => BOX_CHARS.test(l)) ? 'ascii' : 'indent';
+        }
+
+        function parseLine(content) {
+            let description = null;
+            const descIdx = content.indexOf('##');
+            if (descIdx >= 0) {
+                description = content.slice(descIdx + 2).trim();
+                content = content.slice(0, descIdx).trim();
+            }
+            let classes = [];
+            const classMatch = content.match(/\s*:::([\w-]+)/);
+            if (classMatch) {
+                classes.push(classMatch[1]);
+                content = content.replace(/\s*:::[\w-]+/, '').trim();
+            }
+            let iconOverride = null;
+            const iconMatch = content.match(/\s*icon\(([\w-]+)\)/);
+            if (iconMatch) {
+                iconOverride = iconMatch[1];
+                content = content.replace(/\s*icon\([\w-]+\)/, '').trim();
+            }
+            const isDir = content.endsWith('/');
+            const label = isDir ? content.slice(0, -1) : content;
+            const nodeType = isDir ? 'directory' : 'file';
+            return { label, nodeType, classes, iconOverride, description };
+        }
+
+        function buildTree(flat) {
+            const roots = [];
+            const stack = [];
+            for (const node of flat) {
+                while (stack.length > 0 && stack[stack.length - 1].depth >= node.depth) {
+                    stack.pop();
+                }
+                if (stack.length === 0) {
+                    roots.push(node);
+                } else {
+                    stack[stack.length - 1].node.children.push(node);
+                }
+                stack.push({ node, depth: node.depth });
+            }
+            return roots;
+        }
+
+        function parseIndent(dataLines) {
+            let indentUnit = 0;
+            const firstLineIndent = dataLines[0].raw.search(/\S/);
+            for (const dl of dataLines) {
+                const indent = dl.raw.search(/\S/);
+                if (indent > firstLineIndent && indentUnit === 0) {
+                    indentUnit = indent - firstLineIndent;
+                    break;
+                }
+            }
+            if (indentUnit === 0) indentUnit = 4;
+
+            const flat = [];
+            for (const dl of dataLines) {
+                const rawIndent = dl.raw.search(/\S/);
+                const depth = Math.round((rawIndent - firstLineIndent) / indentUnit);
+                const { label, nodeType, classes, iconOverride, description } = parseLine(dl.raw.trim());
+                const iconId = resolveIcon(dl.raw.trim().split(/\s*:::/)[0].split(/\s*icon\(/)[0].split(/\s*##/)[0].trim(), nodeType, iconOverride);
+                flat.push({ label, nodeType, depth, iconId, classes, description, children: [], lineNo: dl.lineNo });
+            }
+            return flat;
+        }
+
+        function parseAscii(dataLines) {
+            const prefixPattern = /^((?:[│├└─][\s─]*|    )*)/;
+            const flat = [];
+            for (const dl of dataLines) {
+                const line = dl.raw;
+                // Count depth by scanning 4-char prefix segments
+                let depth = 0;
+                let pos = 0;
+                while (pos + 3 <= line.length) {
+                    const seg = line.slice(pos, pos + 4);
+                    if (seg === '├── ' || seg === '└── ' || seg === '│   ' || seg === '    ') {
+                        depth++;
+                        pos += 4;
+                    } else if (line.slice(pos, pos + 3) === '├──' || line.slice(pos, pos + 3) === '└──') {
+                        // Handle case where there's no trailing space (end of prefix)
+                        depth++;
+                        pos += 3;
+                        if (line[pos] === ' ') pos++;
+                        break;
+                    } else {
+                        break;
+                    }
+                }
+                const content = line.slice(pos).trim();
+                if (!content) continue;
+
+                const { label, nodeType, classes, iconOverride, description } = parseLine(content);
+                const rawLabel = content.split(/\s*:::/)[0].split(/\s*icon\(/)[0].split(/\s*##/)[0].trim();
+                const iconId = resolveIcon(rawLabel, nodeType, iconOverride);
+                flat.push({ label, nodeType, depth, iconId, classes, description, children: [], lineNo: dl.lineNo });
+            }
+            return flat;
+        }
+
+        function parse(text) {
+            const lines = text.split('\n');
+
+            // Remove the 'filetree' keyword line
+            let startIdx = 0;
+            for (let i = 0; i < lines.length; i++) {
+                if (lines[i].trim().toLowerCase() === 'filetree') { startIdx = i + 1; break; }
+            }
+
+            const dataLines = [];
+            for (let i = startIdx; i < lines.length; i++) {
+                const line = lines[i];
+                if (line.trim() === '' || line.trim().startsWith('%%')) continue;
+                dataLines.push({ raw: line, lineNo: i + 1 });
+            }
+
+            if (dataLines.length === 0) throw new Error('filetree diagram has no nodes');
+
+            const format = detectFormat(dataLines.map(dl => dl.raw));
+            const flat = format === 'ascii' ? parseAscii(dataLines) : parseIndent(dataLines);
+            const roots = buildTree(flat);
+
+            return { type: 'filetree', nodes: roots, flat };
+        }
+
+        // ──────────────────────────────────────────────────
+        // Renderer  (§3 of the spec)
+        // ──────────────────────────────────────────────────
+        const CFG = {
+            marginLeft: 12,
+            marginTop: 8,
+            indentWidth: 22,
+            lineHeight: 28,
+            iconSize: 16,
+            iconGap: 6,
+            descGap: 12,
+            fontSize: 14,
+        };
+
+        function renderIcon(iconId, x, y) {
+            const icon = ICONS[iconId] || ICONS.file;
+            return `<g transform="translate(${x},${y})">
+    <path d="${icon.path}" fill="${icon.color}" fill-rule="evenodd"/>
+  </g>`;
+        }
+
+        function render(ast) {
+            // Flatten with parent/lastChild info
+            const items = [];
+            function walk(nodes, parentIdx) {
+                for (let i = 0; i < nodes.length; i++) {
+                    const node = nodes[i];
+                    const idx = items.length;
+                    items.push({
+                        node,
+                        parentIdx,
+                        isLast: i === nodes.length - 1,
+                        depth: node.depth,
+                    });
+                    walk(node.children, idx);
+                }
+            }
+            walk(ast.nodes, -1);
+
+            // For each depth, track which items still have siblings below them
+            // so we know where to draw continuing vertical lines
+            const lastChildAtDepth = {};
+
+            // Pre-compute: for each item, what's the set of depths that have
+            // a continuing vertical line through this row?
+            const activeConnectors = [];
+            // Tracks the last item index at each depth
+            const lastAtDepth = {};
+            for (let i = items.length - 1; i >= 0; i--) {
+                const depth = items[i].depth;
+                if (!(depth in lastChildAtDepth)) lastChildAtDepth[depth] = i;
+            }
+
+            // Simpler approach: for each item, find parent chain and check
+            // if each ancestor is the last child
+            for (let i = 0; i < items.length; i++) {
+                const active = new Set();
+                let cur = i;
+                while (cur >= 0 && items[cur].parentIdx >= 0) {
+                    const parent = items[cur].parentIdx;
+                    if (!items[cur].isLast) {
+                        active.add(items[cur].depth);
+                    }
+                    cur = parent;
+                    // Also check if parent is not last
+                    if (cur >= 0 && !items[cur].isLast && items[cur].parentIdx >= 0) {
+                        active.add(items[cur].depth);
+                    }
+                }
+                activeConnectors.push(active);
+            }
+
+            const svgParts = [];
+            const maxDepth = Math.max(...items.map(it => it.depth), 0);
+            let maxTextRight = 0;
+
+            for (let i = 0; i < items.length; i++) {
+                const { node, parentIdx, isLast, depth } = items[i];
+                const x = CFG.marginLeft + depth * CFG.indentWidth;
+                const y = CFG.marginTop + i * CFG.lineHeight;
+                const cy = y + CFG.lineHeight / 2; // vertical centre of this row
+
+                const groupClass = `ft-node ft-${node.nodeType}${node.classes.includes('highlight') ? ' ft-highlight' : ''}`;
+
+                let nodeHtml = '';
+
+                // Highlight background
+                if (node.classes.includes('highlight')) {
+                    nodeHtml += `<rect x="${x - 4}" y="${y + 2}" width="500" height="${CFG.lineHeight - 4}" rx="3"
+        fill="var(--highlight-bg)" stroke="var(--highlight-border)" stroke-width="1" />`;
+                }
+
+                // Connector lines
+                if (parentIdx >= 0) {
+                    const parentY = CFG.marginTop + parentIdx * CFG.lineHeight;
+                    const lineX = x - CFG.indentWidth / 2;
+                    // Vertical line from parent down to this node
+                    nodeHtml += `<line x1="${lineX}" y1="${parentY + CFG.lineHeight}" x2="${lineX}" y2="${cy}"
+        stroke="var(--connector)" stroke-width="1" aria-hidden="true"/>`;
+                    // Horizontal stub
+                    nodeHtml += `<line x1="${lineX}" y1="${cy}" x2="${x - 2}" y2="${cy}"
+        stroke="var(--connector)" stroke-width="1" aria-hidden="true"/>`;
+                }
+
+                // Continuing vertical lines for ancestors
+                for (let d = 0; d < depth; d++) {
+                    if (activeConnectors[i].has(d)) {
+                        const lineX = CFG.marginLeft + d * CFG.indentWidth + CFG.indentWidth / 2;
+                        // We don't draw these here—handled by the parent-to-child vertical lines
+                    }
+                }
+
+                // Icon
+                const iconX = x;
+                const iconY = cy - CFG.iconSize / 2;
+                nodeHtml += renderIcon(node.iconId, iconX, iconY);
+
+                // Label
+                const textX = x + CFG.iconSize + CFG.iconGap;
+                const labelClass = node.nodeType === 'directory' ? 'ft-label-dir' : 'ft-label-file';
+                const fontWeight = node.nodeType === 'directory' ? 'bold' : 'normal';
+                const fillColor = node.nodeType === 'directory' ? 'var(--dir-color)' : 'var(--file-color)';
+                nodeHtml += `<text x="${textX}" y="${cy + 5}" font-family="var(--font-sans)"
+      font-size="${CFG.fontSize}" font-weight="${fontWeight}" fill="${fillColor}"
+      class="ft-label ${labelClass}">${escapeHtml(node.label)}</text>`;
+
+                // Estimate text width for description positioning
+                const estLabelWidth = node.label.length * 8.4;
+
+                // Description
+                if (node.description) {
+                    const descX = textX + estLabelWidth + CFG.descGap;
+                    nodeHtml += `<text x="${descX}" y="${cy + 5}" font-family="var(--font-sans)"
+        font-size="${CFG.fontSize - 1}" font-style="italic" fill="var(--desc-color)"
+        class="ft-description">${escapeHtml(node.description)}</text>`;
+                    maxTextRight = Math.max(maxTextRight, descX + node.description.length * 7.5);
+                } else {
+                    maxTextRight = Math.max(maxTextRight, textX + estLabelWidth);
+                }
+
+                svgParts.push(`<g class="${groupClass}" role="treeitem" aria-level="${depth + 1}"${node.nodeType === 'directory' ? ' aria-expanded="true"' : ''}>${nodeHtml}</g>`);
+            }
+
+            const totalHeight = CFG.marginTop + items.length * CFG.lineHeight + 16;
+            const totalWidth = Math.max(maxTextRight + 32, 400);
+
+            return `<svg xmlns="http://www.w3.org/2000/svg" role="tree" class="filetree"
+      width="${totalWidth}" height="${totalHeight}" viewBox="0 0 ${totalWidth} ${totalHeight}"
+      style="font-family: var(--font-sans);">
+    ${svgParts.join('\n    ')}
+  </svg>`;
+        }
+
+        function escapeHtml(text) {
+            return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
+
+        // ──────────────────────────────────────────────────
+        // Wiring
+        // ──────────────────────────────────────────────────
+        const input = document.getElementById('input');
+        const preview = document.getElementById('preview');
+
+        function update() {
+            try {
+                const ast = parse(input.value);
+                const svg = render(ast);
+                preview.innerHTML = svg;
+            } catch (e) {
+                preview.innerHTML = `<div class="error">${escapeHtml(e.message)}</div>`;
+            }
+        }
+
+        input.addEventListener('input', update);
+        update(); // initial render
+
+        function toggleTheme() {
+            document.body.classList.toggle('light');
+        }
+
+        const EXAMPLES = {
+            indent: `filetree
+    my-project/
+        node_modules/  ## (gitignored)
+        public/
+            favicon.ico
+            index.html  ## main HTML shell
+            robots.txt
+        src/
+            components/
+                Button.tsx :::highlight  ## new component
+                Header.tsx
+                Footer.tsx
+            hooks/
+                useAuth.ts  ## authentication hook
+            utils/
+                helpers.ts
+                constants.ts
+            App.tsx :::highlight  ## app root
+            index.css
+            index.tsx  ## entry point
+        .env  ## local environment vars
+        .gitignore
+        Dockerfile
+        package.json  ## project manifest
+        tsconfig.json
+        README.md`,
+            ascii: `filetree
+my-project/
+├── node_modules/  ## (gitignored)
+├── public/
+│   ├── favicon.ico
+│   ├── index.html  ## main HTML shell
+│   └── robots.txt
+├── src/
+│   ├── components/
+│   │   ├── Button.tsx :::highlight  ## new component
+│   │   ├── Header.tsx
+│   │   └── Footer.tsx
+│   ├── hooks/
+│   │   └── useAuth.ts  ## authentication hook
+│   ├── utils/
+│   │   ├── helpers.ts
+│   │   └── constants.ts
+│   ├── App.tsx :::highlight  ## app root
+│   ├── index.css
+│   └── index.tsx  ## entry point
+├── .env  ## local environment vars
+├── .gitignore
+├── Dockerfile
+├── package.json  ## project manifest
+├── tsconfig.json
+└── README.md`,
+        };
+
+        function loadExample(name) {
+            input.value = EXAMPLES[name];
+            update();
+        }
+    </script>
+</body>
+
+</html>

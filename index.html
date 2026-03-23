@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mermaid filetree Proposal</title>
+    <style>
+        :root {
+            --bg: #0d1117;
+            --surface: #161b22;
+            --border: #30363d;
+            --text: #e6edf3;
+            --text-muted: #8b949e;
+            --accent: #58a6ff;
+            --accent-hover: #79c0ff;
+            --green: #3fb950;
+            --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Noto Sans, Helvetica, Arial, sans-serif;
+            --mono: 'Cascadia Code', 'Fira Code', Consolas, monospace;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: var(--font);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .hero {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 80px 24px 48px;
+            text-align: center;
+        }
+
+        .hero h1 {
+            font-size: 48px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            letter-spacing: -1px;
+        }
+
+        .hero h1 code {
+            background: rgba(88, 166, 255, 0.15);
+            color: var(--accent);
+            padding: 2px 12px;
+            border-radius: 8px;
+            font-family: var(--mono);
+            font-size: 44px;
+        }
+
+        .hero .subtitle {
+            font-size: 20px;
+            color: var(--text-muted);
+            margin-bottom: 40px;
+        }
+
+        .cards {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 0 24px 64px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 20px;
+        }
+
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 28px 24px;
+            text-decoration: none;
+            color: var(--text);
+            transition: border-color 0.2s, transform 0.2s;
+        }
+
+        .card:hover {
+            border-color: var(--accent);
+            transform: translateY(-2px);
+        }
+
+        .card .icon {
+            font-size: 32px;
+            margin-bottom: 12px;
+            display: block;
+        }
+
+        .card h2 {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .card p {
+            color: var(--text-muted);
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .card .badge {
+            display: inline-block;
+            margin-top: 12px;
+            font-size: 12px;
+            color: var(--accent);
+            border: 1px solid rgba(88, 166, 255, 0.3);
+            border-radius: 16px;
+            padding: 2px 10px;
+        }
+
+        .syntax-preview {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 0 24px 64px;
+        }
+
+        .syntax-preview h2 {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .syntax-columns {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        @media (max-width: 640px) {
+            .syntax-columns {
+                grid-template-columns: 1fr;
+            }
+
+            .hero h1 {
+                font-size: 32px;
+            }
+
+            .hero h1 code {
+                font-size: 28px;
+            }
+        }
+
+        .syntax-block {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .syntax-block .label {
+            padding: 8px 16px;
+            font-size: 12px;
+            color: var(--text-muted);
+            border-bottom: 1px solid var(--border);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .syntax-block pre {
+            padding: 16px;
+            font-family: var(--mono);
+            font-size: 13px;
+            line-height: 1.6;
+            overflow-x: auto;
+            color: var(--text);
+        }
+
+        footer {
+            text-align: center;
+            padding: 32px 24px;
+            color: var(--text-muted);
+            font-size: 13px;
+            border-top: 1px solid var(--border);
+        }
+
+        footer a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="hero">
+        <h1>Mermaid <code>filetree</code></h1>
+        <p class="subtitle">A proposal to add file tree diagrams to Mermaid.js &mdash; with icons, connector lines, and
+            theme support.</p>
+    </div>
+
+    <div class="cards">
+        <a class="card" href="demo.html">
+            <span class="icon">&#9654;</span>
+            <h2>Interactive Demo</h2>
+            <p>Live editor with real-time SVG rendering. Try both indent and ASCII formats, toggle light/dark themes.
+            </p>
+            <span class="badge">Try it live</span>
+        </a>
+
+        <a class="card" href="feature-proposal.html">
+            <span class="icon">&#128221;</span>
+            <h2>Feature Proposal</h2>
+            <p>Motivation, syntax design, icons, configuration, accessibility, and codebase integration analysis.</p>
+            <span class="badge">GitHub issue detail</span>
+        </a>
+
+        <a class="card" href="technical-spec.html">
+            <span class="icon">&#128736;</span>
+            <h2>Technical Spec</h2>
+            <p>PEG grammar, AST, icon resolution, renderer algorithm, testing plan, and PR file structure.</p>
+            <span class="badge">PR-ready</span>
+        </a>
+    </div>
+
+    <div class="syntax-preview">
+        <h2>Two formats, one output</h2>
+        <div class="syntax-columns">
+            <div class="syntax-block">
+                <div class="label">Indent format</div>
+                <pre>filetree
+    my-project/
+        src/
+            index.js  ## entry point
+        package.json
+        README.md</pre>
+            </div>
+            <div class="syntax-block">
+                <div class="label">ASCII format</div>
+                <pre>filetree
+my-project/
+&#9500;&#9472;&#9472; src/
+&#9474;   &#9492;&#9472;&#9472; index.js  ## entry point
+&#9500;&#9472;&#9472; package.json
+&#9492;&#9472;&#9472; README.md</pre>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        Proposal for <a href="https://github.com/mermaid-js/mermaid">mermaid-js/mermaid</a>.
+        Demo icons inspired by <a href="https://github.com/PKief/vscode-material-icon-theme">Material Icon Theme</a>
+        (MIT)
+        &amp; <a href="https://github.com/microsoft/vscode-codicons">Codicons</a> (MIT).
+    </footer>
+
+</body>
+
+</html>
