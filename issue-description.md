@@ -24,11 +24,9 @@ Mermaid.js should add a **`filetree` diagram type** that renders directory/file 
 
 I've prepared a detailed proposal, technical spec, and working proof-of-concept demo:
 
-- **[Interactive Demo](https://USERNAME.github.io/mermaid-filetree-proposal/demo.html)** — live editor with real-time rendering, 30+ icons, light/dark toggle
-- **[Feature Proposal](https://USERNAME.github.io/mermaid-filetree-proposal/feature-proposal.html)** — full motivation, syntax design, config options, accessibility, codebase integration analysis
-- **[Technical Spec](https://USERNAME.github.io/mermaid-filetree-proposal/technical-spec.html)** — PEG grammar, AST structure, icon resolution, renderer algorithm, testing plan, PR file listing
-
-> Replace `USERNAME` with your GitHub username in the links above.
+- **[Interactive Demo](https://notionparallax.github.io/mermaid_files/)** — live editor with real-time rendering, 30+ icons, light/dark toggle
+- **[Feature Proposal](https://notionparallax.github.io/mermaid-filetree-proposal/feature-proposal.html)** — full motivation, syntax design, config options, accessibility, codebase integration analysis
+- **[Technical Spec](https://notionparallax.github.io/mermaid-filetree-proposal/technical-spec.html)** — PEG grammar, AST structure, icon resolution, renderer algorithm, testing plan, PR file listing
 
 ## Example
 
@@ -83,4 +81,4 @@ Both formats produce the same rendered output — an SVG tree with:
 <!-- TODO: Add a screenshot of the demo in light mode -->
 <!-- Toggle to light mode, take a screenshot, paste it here -->
 
-> Screenshots are from the [interactive demo](https://USERNAME.github.io/mermaid-filetree-proposal/demo.html). Try it yourself — the editor updates in real time.
+> Screenshots are from the [interactive demo](https://notionparallax.github.io/mermaid-filetree-proposal/demo.html). Try it yourself — the editor updates in real time.
