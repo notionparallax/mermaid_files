@@ -25,8 +25,8 @@ Mermaid.js should add a **`filetree` diagram type** that renders directory/file 
 I've prepared a detailed proposal, technical spec, and working proof-of-concept demo:
 
 - **[Interactive Demo](https://notionparallax.github.io/mermaid_files/)** — live editor with real-time rendering, 30+ icons, light/dark toggle
-- **[Feature Proposal](https://notionparallax.github.io/mermaid-filetree-proposal/feature-proposal.html)** — full motivation, syntax design, config options, accessibility, codebase integration analysis
-- **[Technical Spec](https://notionparallax.github.io/mermaid-filetree-proposal/technical-spec.html)** — PEG grammar, AST structure, icon resolution, renderer algorithm, testing plan, PR file listing
+- **[Feature Proposal](https://notionparallax.github.io/mermaid_files/feature-proposal.html)** — full motivation, syntax design, config options, accessibility, codebase integration analysis
+- **[Technical Spec](https://notionparallax.github.io/mermaid_files/technical-spec.html)** — PEG grammar, AST structure, icon resolution, renderer algorithm, testing plan, PR file listing
 
 ## Example
 
